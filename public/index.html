@@ -30,8 +30,8 @@
   --open:#f0a395; --open-soft:#3d2622; --today:#8cc49a; color-scheme:dark}
 body{background:var(--bg);color:var(--fg);font-family:var(--f-body);font-size:16px;line-height:1.45}
 body::before{content:"";position:fixed;inset:0 0 auto;height:env(safe-area-inset-top,0px);z-index:10;background:var(--bg)}
-.wrap{padding-top:calc(20px + env(safe-area-inset-top,0px));max-width:760px;margin:0 auto;padding-left:max(16px,env(safe-area-inset-left,0px));padding-right:max(16px,env(safe-area-inset-right,0px));padding-bottom:48px;display:flex;flex-direction:column;gap:16px}
-header h1{font-family:var(--f-display);font-weight:700;font-size:2rem;margin:0;letter-spacing:-.01em;text-wrap:balance}
+.wrap{gap:10px!important;padding-top:calc(12px + env(safe-area-inset-top,0px));max-width:760px;margin:0 auto;padding-left:max(16px,env(safe-area-inset-left,0px));padding-right:max(16px,env(safe-area-inset-right,0px));padding-bottom:48px;display:flex;flex-direction:column;gap:16px}
+header h1{font-family:var(--f-display);font-weight:700;font-size:1.6rem;margin:0;letter-spacing:-.01em;text-wrap:balance}
 header p{margin:4px 0 0;color:var(--muted)}
 .bar{position:sticky;top:env(safe-area-inset-top,0px);z-index:5;background:var(--bg);padding-block:8px;display:flex;align-items:center;gap:8px;flex-wrap:wrap}
 .weekname{flex:1;min-width:0;text-align:center}
@@ -43,35 +43,33 @@ button:disabled{opacity:.4;cursor:default}
 button:focus-visible,input:focus-visible,textarea:focus-visible{outline:2px solid var(--accent);outline-offset:2px}
 .nav{font-size:1.2rem;width:44px;padding:0}
 .tools{display:flex;gap:8px;flex-wrap:wrap;align-items:center}
-.tools .grow{flex:1}
+.tools .grow{flex:1} .tools button{padding:6px 10px;min-height:36px;font-size:.92rem}
 .status{font-size:.88rem;color:var(--muted)}
 .stats{font-size:.9rem;color:var(--muted)}
 .stats strong{color:var(--open)}
-.days{display:flex;flex-direction:column;gap:10px}
-.day{background:var(--surface);border:1px solid var(--line);border-radius:10px;padding:12px 14px;display:grid;grid-template-columns:96px 1fr;gap:6px 14px}
-.day.today{border-color:var(--today);box-shadow:inset 4px 0 0 var(--today)}
-.day.off{opacity:.5}
-.dname{grid-row:span 3;display:flex;flex-direction:column}
-.dname b{font-family:var(--f-display);font-size:1.15rem;font-weight:700}
-.dname span{color:var(--muted);font-size:.9rem;font-variant-numeric:tabular-nums}
-.dname em{font-style:normal;font-size:.72rem;letter-spacing:.06em;text-transform:uppercase;color:var(--today);font-weight:700;margin-top:2px}
-.row{display:grid;grid-template-columns:78px 1fr;align-items:center;gap:8px;min-width:0}
-.row label{font-size:.72rem;letter-spacing:.07em;text-transform:uppercase;font-weight:700}
-.row.m label{color:var(--accent)} .row.a label{color:var(--hay)} .row.s label{color:var(--muted)}
-input,textarea{font:inherit;width:100%;box-sizing:border-box;border:1px solid var(--line);border-radius:7px;padding:7px 10px;background:var(--bg);color:var(--fg);min-width:0}
-textarea{resize:vertical;min-height:38px;line-height:1.35}
-.row.m input.filled{background:var(--accent-soft);border-color:transparent;font-weight:600}
-.row.a input.filled{background:var(--hay-soft);border-color:transparent;font-weight:600}
-.row input.empty::placeholder{color:var(--open)}
-.row input.empty{border-style:dashed;border-color:var(--open);background:var(--open-soft)}
-.day.off input,.day.off textarea{border-style:solid;border-color:var(--line);background:var(--bg)}
-.note{font-size:.88rem;color:var(--muted);border-top:1px solid var(--line);padding-top:12px}
-.toast{position:fixed;left:50%;transform:translateX(-50%);bottom:calc(16px + env(safe-area-inset-bottom,0px));background:var(--fg);color:var(--bg);padding:8px 14px;border-radius:8px;font-size:.92rem}
-@media (max-width:520px){
-  .day{grid-template-columns:1fr}
-  .dname{grid-row:auto;flex-direction:row;align-items:baseline;gap:8px}
-  .row{grid-template-columns:70px 1fr}
-}
+.days{background:var(--surface);border:1px solid var(--line);border-radius:10px;overflow:hidden}
+.thead,.day{display:grid;grid-template-columns:52px minmax(0,1fr) minmax(0,1fr);gap:3px 6px;padding:5px 8px;align-items:center}
+.thead{background:var(--bg);border-bottom:1px solid var(--line);font-size:.72rem;letter-spacing:.07em;text-transform:uppercase;font-weight:700}
+.thead .m{color:var(--accent)} .thead .a{color:var(--hay)}
+.day{border-bottom:1px solid var(--line)}
+.day:last-child{border-bottom:0}
+.day:nth-child(odd){background:color-mix(in srgb,var(--bg) 45%,var(--surface))}
+.day.today{box-shadow:inset 4px 0 0 var(--today)}
+.day.today .dname b{color:var(--today)}
+.day.off{opacity:.45}
+.dname{grid-row:span 2;display:flex;flex-direction:column;line-height:1.15}
+.dname b{font-family:var(--f-display);font-size:1.05rem;font-weight:700}
+.dname span{color:var(--muted);font-size:.8rem;font-variant-numeric:tabular-nums}
+.day input{padding:5px 8px;font-size:.95rem;font-family:var(--f-body)}
+.day textarea{grid-column:2 / 4;resize:none;min-height:0;height:28px;padding:3px 8px;font-family:var(--f-body);font-size:.85rem;background:transparent;border-color:transparent;color:var(--muted)}
+.day textarea:focus{background:var(--bg);border-color:var(--line);color:var(--fg)}
+.day textarea.has{color:var(--fg);font-weight:600;background:var(--hay-soft)}
+input.m.filled{background:var(--accent-soft);border-color:transparent;font-weight:600}
+input.a.filled{background:var(--hay-soft);border-color:transparent;font-weight:600}
+input.empty::placeholder{color:var(--open)}
+input.empty{border-style:dashed;border-color:var(--open);background:var(--open-soft)}
+.day.off input,.day.off textarea{border-color:transparent;background:transparent}
+.sr{position:absolute;width:1px;height:1px;overflow:hidden;clip:rect(0 0 0 0)}
 @media (prefers-reduced-motion:reduce){*{transition:none!important}}
 </style>
 <style>*,*::before{box-sizing:border-box} body{margin:0} [hidden]{display:none!important}</style>
@@ -80,7 +78,7 @@ textarea{resize:vertical;min-height:38px;line-height:1.35}
 <div class="wrap">
   <header>
     <h1>Stalldienstplan</h1>
-    <p>Trag dich mit deinem Namen für den Morgen- oder Abenddienst ein. Gespeichert wird automatisch.</p>
+    <p>Feld antippen, Namen eintragen – wird automatisch gespeichert.</p>
   </header>
 
   <div class="bar">
@@ -90,8 +88,8 @@ textarea{resize:vertical;min-height:38px;line-height:1.35}
   </div>
 
   <div class="tools">
-    <button id="todayBtn">Diese Woche</button>
-    <button id="copyBtn">Woche in WhatsApp teilen</button>
+    <button id="todayBtn">Heute</button>
+    <button id="copyBtn">In WhatsApp teilen</button>
     <span class="grow"></span>
     <span class="stats" id="stats"></span>
   </div>
@@ -127,16 +125,16 @@ function render(){
   const todayIso = iso(new Date()), host = $("days");
   const active = document.activeElement && document.activeElement.id;
   if (host.dataset.week !== iso(week)){
-    host.dataset.week = iso(week); host.innerHTML = "";
+    host.dataset.week = iso(week); host.innerHTML = '<div class="thead"><span>Tag</span><span class="m">☀️ Morgens</span><span class="a">🌙 Abends</span></div>';
     for (let i=0;i<7;i++){
       const d = addDays(week,i), k = iso(d), off = d < START;
       const el = document.createElement("section");
       el.className = "day" + (k===todayIso?" today":"") + (off?" off":"");
       el.innerHTML = `
-        <div class="dname"><b>${DAYNAMES[i]}</b><span>${fmt(d)}</span>${k===todayIso?"<em>Heute</em>":""}${off?"<em>vor Planstart</em>":""}</div>
-        <div class="row m"><label for="m-${k}">Morgens</label><input id="m-${k}" data-day="${k}" data-f="morgens" placeholder="offen – Name eintragen" maxlength="60" autocomplete="off"></div>
-        <div class="row a"><label for="a-${k}">Abends</label><input id="a-${k}" data-day="${k}" data-f="abends" placeholder="offen – Name eintragen" maxlength="60" autocomplete="off"></div>
-        <div class="row s"><label for="s-${k}">Sonstiges</label><textarea id="s-${k}" data-day="${k}" data-f="sonstiges" rows="1" placeholder="z. B. Hufschmied 10 Uhr, Heulieferung" maxlength="300"></textarea></div>`;
+        <div class="dname"><b>${DAYNAMES[i].slice(0,2)}</b><span>${fmt(d)}</span></div>
+        <label class="sr" for="m-${k}">${DAYNAMES[i]} morgens</label><input class="m" id="m-${k}" data-day="${k}" data-f="morgens" placeholder="offen" maxlength="60" autocomplete="off">
+        <label class="sr" for="a-${k}">${DAYNAMES[i]} abends</label><input class="a" id="a-${k}" data-day="${k}" data-f="abends" placeholder="offen" maxlength="60" autocomplete="off">
+        <label class="sr" for="s-${k}">${DAYNAMES[i]} Sonstiges</label><textarea id="s-${k}" data-day="${k}" data-f="sonstiges" rows="1" placeholder="+ Sonstiges" maxlength="300"></textarea>`;
       if (off) el.querySelectorAll("input,textarea").forEach(x=>{x.disabled=true;x.placeholder="";});
       host.appendChild(el);
     }
@@ -149,7 +147,7 @@ function render(){
       const off = el.disabled, filled = el.value.trim() !== "";
       el.classList.toggle("filled", filled); el.classList.toggle("empty", !filled && !off);
       if (!filled && !off) open++;
-    }
+    } else el.classList.toggle("has", el.value.trim()!=="");
   });
   $("stats").innerHTML = open ? `<strong>${open}</strong> ${open===1?"Dienst":"Dienste"} offen` : "Alle Dienste besetzt ✓";
 }

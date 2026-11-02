@@ -17,17 +17,20 @@
   --bg:#eef0ea; --surface:#fbfcf8; --line:#d3d8cc; --fg:#1f261f; --muted:#5d685c;
   --accent:#2f5d3a; --accent-soft:#dbe7dc; --hay:#a86f12; --hay-soft:#f6e8c9;
   --open:#9c3b2e; --open-soft:#f6e1dc; --today:#2f5d3a;
+  --p0:#f7d6dc; --p0f:#8a2340; --p1:#d5e3f7; --p1f:#1f4c86; --p2:#cdeee9; --p2f:#16655c; --p3:#d9eccb; --p3f:#386a1d; --p4:#e6dbf6; --p4f:#5b3594; --p5:#fbe2c4; --p5f:#8a4d0c;
   --f-display:"Zilla Slab", Rockwell, "Roboto Slab", Georgia, serif;
   --f-body:"Source Sans 3", "Segoe UI", system-ui, -apple-system, sans-serif;
 }
 @media (prefers-color-scheme: dark){:root:not([data-theme="light"]){
   --bg:#151a16; --surface:#1d241e; --line:#334035; --fg:#e7ece4; --muted:#a3ae9f;
   --accent:#8cc49a; --accent-soft:#25382a; --hay:#e3b057; --hay-soft:#3a3020;
-  --open:#f0a395; --open-soft:#3d2622; --today:#8cc49a; color-scheme:dark}}
+  --open:#f0a395; --open-soft:#3d2622; --today:#8cc49a;
+  --p0:#4a2430; --p0f:#f6b8c7; --p1:#22344f; --p1f:#a9c8f2; --p2:#1d3f3b; --p2f:#93ddd2; --p3:#2b3f20; --p3f:#b4dc98; --p4:#36294d; --p4f:#cdb5f1; --p5:#4a3418; --p5f:#f3c88f; color-scheme:dark}}
 :root[data-theme="dark"]{
   --bg:#151a16; --surface:#1d241e; --line:#334035; --fg:#e7ece4; --muted:#a3ae9f;
   --accent:#8cc49a; --accent-soft:#25382a; --hay:#e3b057; --hay-soft:#3a3020;
-  --open:#f0a395; --open-soft:#3d2622; --today:#8cc49a; color-scheme:dark}
+  --open:#f0a395; --open-soft:#3d2622; --today:#8cc49a;
+  --p0:#4a2430; --p0f:#f6b8c7; --p1:#22344f; --p1f:#a9c8f2; --p2:#1d3f3b; --p2f:#93ddd2; --p3:#2b3f20; --p3f:#b4dc98; --p4:#36294d; --p4f:#cdb5f1; --p5:#4a3418; --p5f:#f3c88f; color-scheme:dark}
 body{background:var(--bg);color:var(--fg);font-family:var(--f-body);font-size:16px;line-height:1.45}
 body::before{content:"";position:fixed;inset:0 0 auto;height:env(safe-area-inset-top,0px);z-index:10;background:var(--bg)}
 .wrap{gap:10px!important;padding-top:calc(12px + env(safe-area-inset-top,0px));max-width:760px;margin:0 auto;padding-left:max(16px,env(safe-area-inset-left,0px));padding-right:max(16px,env(safe-area-inset-right,0px));padding-bottom:48px;display:flex;flex-direction:column;gap:16px}
@@ -62,16 +65,17 @@ button:focus-visible,input:focus-visible,textarea:focus-visible{outline:2px soli
 .dname span{color:var(--muted);font-size:.8rem;font-variant-numeric:tabular-nums}
 .slot{min-height:38px;padding:5px 8px;font-size:.95rem;text-align:left;border-radius:7px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;width:100%}
 .slot.empty{border:1px dashed var(--open);background:var(--open-soft);color:var(--open)}
-.slot.m.filled{background:var(--accent-soft);border-color:transparent;font-weight:600}
-.slot.a.filled{background:var(--hay-soft);border-color:transparent;font-weight:600}
-.slot.mine{outline:2px solid var(--fg);outline-offset:-2px}
+.p0{--pc:var(--p0);--pf:var(--p0f)}.p1{--pc:var(--p1);--pf:var(--p1f)}.p2{--pc:var(--p2);--pf:var(--p2f)}.p3{--pc:var(--p3);--pf:var(--p3f)}.p4{--pc:var(--p4);--pf:var(--p4f)}.p5{--pc:var(--p5);--pf:var(--p5f)}
+.slot.filled{background:var(--pc,var(--accent-soft));color:var(--pf,var(--fg));border-color:transparent;font-weight:700}
+.names button[class*="p"]{border-left:8px solid var(--pc)}
+.slot.mine{outline:2px solid var(--pf);outline-offset:-2px}
 .day textarea{grid-column:2 / 4;resize:none;min-height:0;height:28px;padding:3px 8px;font-family:var(--f-body);font-size:.85rem;background:transparent;border-color:transparent;color:var(--muted)}
 .day textarea:focus{background:var(--bg);border-color:var(--line);color:var(--fg)}
 .day textarea.has{color:var(--fg);font-weight:600;background:var(--hay-soft)}
 .day.off .slot,.day.off textarea{border-color:transparent;background:transparent}
 .sr{position:absolute;width:1px;height:1px;overflow:hidden;clip:rect(0 0 0 0)}
 .me{display:flex;align-items:center;gap:8px;font-size:.92rem;color:var(--muted)}
-.me b{color:var(--fg)}
+.me b{color:var(--fg)} .me b.chip{background:var(--pc);color:var(--pf);padding:1px 8px;border-radius:6px}
 .me button{min-height:30px;padding:2px 10px;font-size:.85rem}
 .toast{position:fixed;left:50%;transform:translateX(-50%);bottom:calc(16px + env(safe-area-inset-bottom,0px));background:var(--fg);color:var(--bg);padding:8px 14px;border-radius:8px;font-size:.92rem;z-index:30}
 .sheet{position:fixed;inset:0;z-index:20;background:color-mix(in srgb,var(--fg) 35%,transparent);display:flex;align-items:flex-end;justify-content:center}
@@ -80,7 +84,7 @@ button:focus-visible,input:focus-visible,textarea:focus-visible{outline:2px soli
 .sheet p{margin:0;color:var(--muted);font-size:.92rem}
 .names{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:8px}
 .names button{min-height:48px;font-size:1.05rem;font-weight:600}
-.names button.cur{background:var(--accent-soft);border-color:var(--accent)}
+.names button.cur{background:var(--pc);color:var(--pf);font-weight:700}
 .sheet .row2{display:flex;gap:8px}
 .sheet .row2 button{flex:1}
 .danger{color:var(--open)}
@@ -165,6 +169,7 @@ function render(){
     el.textContent = off ? "" : (v || "offen");
     el.classList.toggle("filled", !!v); el.classList.toggle("empty", !v && !off);
     el.classList.toggle("mine", !!v && v === me);
+    for (let i=0;i<6;i++) el.classList.toggle("p"+i, NAMES[i]===v);
     if (!v && !off) open++;
   });
   host.querySelectorAll("textarea").forEach(el=>{
@@ -172,7 +177,7 @@ function render(){
     if (el.id !== active && !el.dataset.dirty) el.value = v;
     el.classList.toggle("has", el.value.trim()!=="");
   });
-  $("me").hidden = !me; $("meName").textContent = me || "";
+  $("me").hidden = !me; $("meName").textContent = me || ""; $("meName").className = me ? "p"+NAMES.indexOf(me)+" chip" : "";
   $("stats").innerHTML = open ? `<strong>${open}</strong> ${open===1?"Dienst":"Dienste"} offen` : "Alle Dienste besetzt ✓";
 }
 
@@ -207,7 +212,7 @@ async function setField(k, f, v){
 function sheet(title, text, names, onPick, actions){
   $("sheetTitle").textContent = title; $("sheetText").textContent = text; $("sheetText").hidden = !text;
   const box = $("sheetNames"); box.innerHTML = "";
-  (names||[]).forEach(n=>{ const b=document.createElement("button"); b.textContent=n; if(n===me) b.className="cur"; b.onclick=()=>{ close(); onPick(n); }; box.appendChild(b); });
+  (names||[]).forEach(n=>{ const b=document.createElement("button"); b.textContent=n; b.className="p"+NAMES.indexOf(n)+(n===me?" cur":""); b.onclick=()=>{ close(); onPick(n); }; box.appendChild(b); });
   const act = $("sheetActions"); act.innerHTML = "";
   (actions||[]).forEach(([label,fn,cls])=>{ const b=document.createElement("button"); b.textContent=label; if(cls) b.className=cls; b.onclick=()=>{ close(); fn&&fn(); }; act.appendChild(b); });
   $("sheet").hidden = false;

@@ -60,16 +60,30 @@ button:focus-visible,input:focus-visible,textarea:focus-visible{outline:2px soli
 .dname{grid-row:span 2;display:flex;flex-direction:column;line-height:1.15}
 .dname b{font-family:var(--f-display);font-size:1.05rem;font-weight:700}
 .dname span{color:var(--muted);font-size:.8rem;font-variant-numeric:tabular-nums}
-.day input{padding:5px 8px;font-size:.95rem;font-family:var(--f-body)}
+.slot{min-height:38px;padding:5px 8px;font-size:.95rem;text-align:left;border-radius:7px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;width:100%}
+.slot.empty{border:1px dashed var(--open);background:var(--open-soft);color:var(--open)}
+.slot.m.filled{background:var(--accent-soft);border-color:transparent;font-weight:600}
+.slot.a.filled{background:var(--hay-soft);border-color:transparent;font-weight:600}
+.slot.mine{outline:2px solid var(--fg);outline-offset:-2px}
 .day textarea{grid-column:2 / 4;resize:none;min-height:0;height:28px;padding:3px 8px;font-family:var(--f-body);font-size:.85rem;background:transparent;border-color:transparent;color:var(--muted)}
 .day textarea:focus{background:var(--bg);border-color:var(--line);color:var(--fg)}
 .day textarea.has{color:var(--fg);font-weight:600;background:var(--hay-soft)}
-input.m.filled{background:var(--accent-soft);border-color:transparent;font-weight:600}
-input.a.filled{background:var(--hay-soft);border-color:transparent;font-weight:600}
-input.empty::placeholder{color:var(--open)}
-input.empty{border-style:dashed;border-color:var(--open);background:var(--open-soft)}
-.day.off input,.day.off textarea{border-color:transparent;background:transparent}
+.day.off .slot,.day.off textarea{border-color:transparent;background:transparent}
 .sr{position:absolute;width:1px;height:1px;overflow:hidden;clip:rect(0 0 0 0)}
+.me{display:flex;align-items:center;gap:8px;font-size:.92rem;color:var(--muted)}
+.me b{color:var(--fg)}
+.me button{min-height:30px;padding:2px 10px;font-size:.85rem}
+.toast{position:fixed;left:50%;transform:translateX(-50%);bottom:calc(16px + env(safe-area-inset-bottom,0px));background:var(--fg);color:var(--bg);padding:8px 14px;border-radius:8px;font-size:.92rem;z-index:30}
+.sheet{position:fixed;inset:0;z-index:20;background:color-mix(in srgb,var(--fg) 35%,transparent);display:flex;align-items:flex-end;justify-content:center}
+.sheet .box{background:var(--surface);width:100%;max-width:480px;border-radius:14px 14px 0 0;padding:16px max(16px,env(safe-area-inset-right,0px)) calc(16px + env(safe-area-inset-bottom,0px)) max(16px,env(safe-area-inset-left,0px));display:flex;flex-direction:column;gap:12px}
+.sheet h2{font-family:var(--f-display);font-size:1.2rem;margin:0}
+.sheet p{margin:0;color:var(--muted);font-size:.92rem}
+.names{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:8px}
+.names button{min-height:48px;font-size:1.05rem;font-weight:600}
+.names button.cur{background:var(--accent-soft);border-color:var(--accent)}
+.sheet .row2{display:flex;gap:8px}
+.sheet .row2 button{flex:1}
+.danger{color:var(--open)}
 @media (prefers-reduced-motion:reduce){*{transition:none!important}}
 </style>
 <style>*,*::before{box-sizing:border-box} body{margin:0} [hidden]{display:none!important}</style>
@@ -78,7 +92,8 @@ input.empty{border-style:dashed;border-color:var(--open);background:var(--open-s
 <div class="wrap">
   <header>
     <h1>Stalldienstplan</h1>
-    <p>Feld antippen, Namen eintragen – wird automatisch gespeichert.</p>
+    <p>Freies Feld antippen – dein Name wird eingetragen.</p>
+    <div class="me" id="me" hidden>Du bist <b id="meName"></b><button id="meChange">ändern</button></div>
   </header>
 
   <div class="bar">
@@ -97,9 +112,14 @@ input.empty{border-style:dashed;border-color:var(--open);background:var(--open-s
 
   <div class="days" id="days"></div>
 
-  <p class="note">Gilt ab 1. Dezember 2026. Offene Dienste sind rot umrandet. „Woche in WhatsApp teilen“ schickt eine Übersicht der Woche direkt in die Gruppe.</p>
+  <p class="note">Gilt ab 1. Dezember 2026. Freies Feld antippen trägt dich ein, dein eigener Eintrag nochmal antippen trägt dich aus. Belegte Felder lassen sich antippen und tauschen. „Woche in WhatsApp teilen“ schickt eine Übersicht der Woche direkt in die Gruppe.</p>
 </div>
 <div class="toast" id="toast" hidden></div>
+<div class="sheet" id="sheet" hidden><div class="box" role="dialog" aria-modal="true" aria-labelledby="sheetTitle">
+  <h2 id="sheetTitle"></h2><p id="sheetText"></p>
+  <div class="names" id="sheetNames"></div>
+  <div class="row2" id="sheetActions"></div>
+</div></div>
 
 <script>
 const START = new Date(2026,11,1);
@@ -132,23 +152,27 @@ function render(){
       el.className = "day" + (k===todayIso?" today":"") + (off?" off":"");
       el.innerHTML = `
         <div class="dname"><b>${DAYNAMES[i].slice(0,2)}</b><span>${fmt(d)}</span></div>
-        <label class="sr" for="m-${k}">${DAYNAMES[i]} morgens</label><input class="m" id="m-${k}" data-day="${k}" data-f="morgens" placeholder="offen" maxlength="60" autocomplete="off">
-        <label class="sr" for="a-${k}">${DAYNAMES[i]} abends</label><input class="a" id="a-${k}" data-day="${k}" data-f="abends" placeholder="offen" maxlength="60" autocomplete="off">
+        <button class="slot m" data-day="${k}" data-f="morgens" aria-label="${DAYNAMES[i]} morgens"></button>
+        <button class="slot a" data-day="${k}" data-f="abends" aria-label="${DAYNAMES[i]} abends"></button>
         <label class="sr" for="s-${k}">${DAYNAMES[i]} Sonstiges</label><textarea id="s-${k}" data-day="${k}" data-f="sonstiges" rows="1" placeholder="+ Sonstiges" maxlength="300"></textarea>`;
-      if (off) el.querySelectorAll("input,textarea").forEach(x=>{x.disabled=true;x.placeholder="";});
+      if (off) el.querySelectorAll(".slot,textarea").forEach(x=>{x.disabled=true;x.placeholder="";});
       host.appendChild(el);
     }
   }
   let open = 0;
-  host.querySelectorAll("input,textarea").forEach(el=>{
+  host.querySelectorAll(".slot").forEach(el=>{
+    const v = (data[el.dataset.day]||{})[el.dataset.f] || "", off = el.disabled;
+    el.textContent = off ? "" : (v || "offen");
+    el.classList.toggle("filled", !!v); el.classList.toggle("empty", !v && !off);
+    el.classList.toggle("mine", !!v && v === me);
+    if (!v && !off) open++;
+  });
+  host.querySelectorAll("textarea").forEach(el=>{
     const v = (data[el.dataset.day]||{})[el.dataset.f] || "";
     if (el.id !== active && !el.dataset.dirty) el.value = v;
-    if (el.tagName === "INPUT"){
-      const off = el.disabled, filled = el.value.trim() !== "";
-      el.classList.toggle("filled", filled); el.classList.toggle("empty", !filled && !off);
-      if (!filled && !off) open++;
-    } else el.classList.toggle("has", el.value.trim()!=="");
+    el.classList.toggle("has", el.value.trim()!=="");
   });
+  $("me").hidden = !me; $("meName").textContent = me || "";
   $("stats").innerHTML = open ? `<strong>${open}</strong> ${open===1?"Dienst":"Dienste"} offen` : "Alle Dienste besetzt ✓";
 }
 
@@ -167,6 +191,44 @@ async function load(quiet){
   }catch{ if (!quiet) $("status").textContent = "Der Plan kann gerade nicht geladen werden. Prüf deine Internetverbindung."; }
 }
 
+const NAMES = ["Bianca","Jürgen","Markus","Carmen","Emma","Antonia"];
+let me = null; try{ me = localStorage.getItem("stall-me"); }catch{}
+if (me && !NAMES.includes(me)) me = null;
+async function setField(k, f, v){
+  $("status").textContent = "Speichert …";
+  const before = (data[k]||{})[f] || "";
+  (data[k] ||= {})[f] = v; render();
+  try{
+    const r = await fetch("/api/entry",{method:"POST",headers:{"content-type":"application/json"},body:JSON.stringify({day:k,field:f,text:v})});
+    if (!r.ok) throw 0;
+    $("status").textContent = "Gespeichert ✓";
+  }catch{ data[k][f] = before; render(); $("status").textContent = "Speichern hat nicht geklappt. Bitte noch einmal versuchen."; }
+}
+function sheet(title, text, names, onPick, actions){
+  $("sheetTitle").textContent = title; $("sheetText").textContent = text; $("sheetText").hidden = !text;
+  const box = $("sheetNames"); box.innerHTML = "";
+  (names||[]).forEach(n=>{ const b=document.createElement("button"); b.textContent=n; if(n===me) b.className="cur"; b.onclick=()=>{ close(); onPick(n); }; box.appendChild(b); });
+  const act = $("sheetActions"); act.innerHTML = "";
+  (actions||[]).forEach(([label,fn,cls])=>{ const b=document.createElement("button"); b.textContent=label; if(cls) b.className=cls; b.onclick=()=>{ close(); fn&&fn(); }; act.appendChild(b); });
+  $("sheet").hidden = false;
+  function close(){ $("sheet").hidden = true; }
+}
+$("sheet").addEventListener("click", e=>{ if (e.target.id==="sheet") $("sheet").hidden = true; });
+function askMe(then){
+  sheet("Wer bist du?", "Einmal auswählen – danach trägt ein Tipp auf ein freies Feld dich ein. Dein Handy merkt sich das.", NAMES, n=>{
+    me = n; try{ localStorage.setItem("stall-me", n); }catch{} render(); then && then();
+  }, me ? [["Abbrechen"]] : []);
+}
+$("meChange").onclick = ()=> askMe();
+$("days").addEventListener("click", e=>{
+  const el = e.target.closest(".slot"); if (!el || el.disabled) return;
+  const k = el.dataset.day, f = el.dataset.f, v = (data[k]||{})[f] || "";
+  const d = new Date(k+"T12:00"), label = DAYNAMES[(d.getDay()+6)%7] + " " + fmt(d) + " · " + (f==="morgens"?"morgens":"abends");
+  if (!me) return askMe(()=>{ if (!((data[k]||{})[f])) setField(k,f,me); });
+  if (!v) return setField(k, f, me);
+  if (v === me) return sheet(label, "Du bist hier eingetragen.", null, null, [["Austragen",()=>setField(k,f,""),"danger"],["Abbrechen"]]);
+  sheet(label, v + " ist eingetragen. Wer übernimmt stattdessen?", NAMES.filter(n=>n!==v), n=>setField(k,f,n), [["Feld leeren",()=>setField(k,f,""),"danger"],["Abbrechen"]]);
+});
 const timers = {};
 async function save(el){
   const k = el.dataset.day, f = el.dataset.f, v = el.value.trim();
@@ -182,7 +244,6 @@ async function save(el){
 $("days").addEventListener("input", e=>{
   const el = e.target; if (!el.dataset.day) return;
   el.dataset.dirty = "1";
-  if (el.tagName==="INPUT"){ const f = el.value.trim()!==""; el.classList.toggle("filled",f); el.classList.toggle("empty",!f); }
   clearTimeout(timers[el.id]); timers[el.id] = setTimeout(()=>save(el), 1000);
 });
 $("days").addEventListener("change", e=>{ const el=e.target; if(!el.dataset.day) return; clearTimeout(timers[el.id]); save(el); });
@@ -212,6 +273,7 @@ setInterval(()=>{ if (document.visibilityState==="visible" && !document.querySel
 document.addEventListener("visibilitychange", ()=>{ if (document.visibilityState==="visible"){ const w = currentWeek(); if (+w > +week && iso(week) === host_week_seen) week = w; render(); load(true); } });
 let host_week_seen = iso(week);
 render(); load();
+if (!me) askMe();
 </script>
 </body>
 </html>

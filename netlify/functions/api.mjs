@@ -36,7 +36,7 @@ export default async (req) => {
     try { body = await req.json(); } catch { return json({ error: "bad json" }, 400); }
     const { day, field } = body || {};
     if (!DATE.test(day || "") || !FIELDS.includes(field)) return json({ error: "bad field" }, 400);
-    if (day < "2026-12-01") return json({ error: "before start" }, 400);
+    if (day < "2026-11-02") return json({ error: "before start" }, 400);
     const text = String(body.text || "").trim().slice(0, MAX[field]);
     const key = `${day}/${field}`;
     if (!text) await s.delete(key);

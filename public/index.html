@@ -1,0 +1,219 @@
+<!doctype html>
+<html lang="de">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<title>Stalldienstplan</title>
+<meta name="description" content="Wer macht diese Woche Stalldienst? Einfach antippen und eintragen.">
+<meta property="og:title" content="Stalldienstplan 🐴">
+<meta property="og:description" content="Morgens, abends, Besonderheiten – einfach antippen und eintragen.">
+<meta name="theme-color" content="#2f5d3a">
+<link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>🐴</text></svg>">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Zilla+Slab:wght@500;700&family=Source+Sans+3:wght@400;600;700&display=swap">
+<style>
+/* Layout: eine Woche als Stapel von Tageskarten (Mo–So), je Tag Morgen / Abend / Sonstiges; Wochenleiste oben klebend */
+:root{
+  --bg:#eef0ea; --surface:#fbfcf8; --line:#d3d8cc; --fg:#1f261f; --muted:#5d685c;
+  --accent:#2f5d3a; --accent-soft:#dbe7dc; --hay:#a86f12; --hay-soft:#f6e8c9;
+  --open:#9c3b2e; --open-soft:#f6e1dc; --today:#2f5d3a;
+  --f-display:"Zilla Slab", Rockwell, "Roboto Slab", Georgia, serif;
+  --f-body:"Source Sans 3", "Segoe UI", system-ui, -apple-system, sans-serif;
+}
+@media (prefers-color-scheme: dark){:root:not([data-theme="light"]){
+  --bg:#151a16; --surface:#1d241e; --line:#334035; --fg:#e7ece4; --muted:#a3ae9f;
+  --accent:#8cc49a; --accent-soft:#25382a; --hay:#e3b057; --hay-soft:#3a3020;
+  --open:#f0a395; --open-soft:#3d2622; --today:#8cc49a; color-scheme:dark}}
+:root[data-theme="dark"]{
+  --bg:#151a16; --surface:#1d241e; --line:#334035; --fg:#e7ece4; --muted:#a3ae9f;
+  --accent:#8cc49a; --accent-soft:#25382a; --hay:#e3b057; --hay-soft:#3a3020;
+  --open:#f0a395; --open-soft:#3d2622; --today:#8cc49a; color-scheme:dark}
+body{background:var(--bg);color:var(--fg);font-family:var(--f-body);font-size:16px;line-height:1.45}
+body::before{content:"";position:fixed;inset:0 0 auto;height:env(safe-area-inset-top,0px);z-index:10;background:var(--bg)}
+.wrap{padding-top:calc(20px + env(safe-area-inset-top,0px));max-width:760px;margin:0 auto;padding-left:max(16px,env(safe-area-inset-left,0px));padding-right:max(16px,env(safe-area-inset-right,0px));padding-bottom:48px;display:flex;flex-direction:column;gap:16px}
+header h1{font-family:var(--f-display);font-weight:700;font-size:2rem;margin:0;letter-spacing:-.01em;text-wrap:balance}
+header p{margin:4px 0 0;color:var(--muted)}
+.bar{position:sticky;top:env(safe-area-inset-top,0px);z-index:5;background:var(--bg);padding-block:8px;display:flex;align-items:center;gap:8px;flex-wrap:wrap}
+.weekname{flex:1;min-width:0;text-align:center}
+.weekname b{display:block;font-family:var(--f-display);font-size:1.25rem;font-weight:700}
+.weekname span{color:var(--muted);font-size:.9rem;font-variant-numeric:tabular-nums}
+button{font:inherit;cursor:pointer;border:1px solid var(--line);background:var(--surface);color:var(--fg);border-radius:8px;padding:8px 12px;min-height:40px}
+button:hover:not(:disabled){border-color:var(--accent)}
+button:disabled{opacity:.4;cursor:default}
+button:focus-visible,input:focus-visible,textarea:focus-visible{outline:2px solid var(--accent);outline-offset:2px}
+.nav{font-size:1.2rem;width:44px;padding:0}
+.tools{display:flex;gap:8px;flex-wrap:wrap;align-items:center}
+.tools .grow{flex:1}
+.status{font-size:.88rem;color:var(--muted)}
+.stats{font-size:.9rem;color:var(--muted)}
+.stats strong{color:var(--open)}
+.days{display:flex;flex-direction:column;gap:10px}
+.day{background:var(--surface);border:1px solid var(--line);border-radius:10px;padding:12px 14px;display:grid;grid-template-columns:96px 1fr;gap:6px 14px}
+.day.today{border-color:var(--today);box-shadow:inset 4px 0 0 var(--today)}
+.day.off{opacity:.5}
+.dname{grid-row:span 3;display:flex;flex-direction:column}
+.dname b{font-family:var(--f-display);font-size:1.15rem;font-weight:700}
+.dname span{color:var(--muted);font-size:.9rem;font-variant-numeric:tabular-nums}
+.dname em{font-style:normal;font-size:.72rem;letter-spacing:.06em;text-transform:uppercase;color:var(--today);font-weight:700;margin-top:2px}
+.row{display:grid;grid-template-columns:78px 1fr;align-items:center;gap:8px;min-width:0}
+.row label{font-size:.72rem;letter-spacing:.07em;text-transform:uppercase;font-weight:700}
+.row.m label{color:var(--accent)} .row.a label{color:var(--hay)} .row.s label{color:var(--muted)}
+input,textarea{font:inherit;width:100%;box-sizing:border-box;border:1px solid var(--line);border-radius:7px;padding:7px 10px;background:var(--bg);color:var(--fg);min-width:0}
+textarea{resize:vertical;min-height:38px;line-height:1.35}
+.row.m input.filled{background:var(--accent-soft);border-color:transparent;font-weight:600}
+.row.a input.filled{background:var(--hay-soft);border-color:transparent;font-weight:600}
+.row input.empty::placeholder{color:var(--open)}
+.row input.empty{border-style:dashed;border-color:var(--open);background:var(--open-soft)}
+.day.off input,.day.off textarea{border-style:solid;border-color:var(--line);background:var(--bg)}
+.note{font-size:.88rem;color:var(--muted);border-top:1px solid var(--line);padding-top:12px}
+.toast{position:fixed;left:50%;transform:translateX(-50%);bottom:calc(16px + env(safe-area-inset-bottom,0px));background:var(--fg);color:var(--bg);padding:8px 14px;border-radius:8px;font-size:.92rem}
+@media (max-width:520px){
+  .day{grid-template-columns:1fr}
+  .dname{grid-row:auto;flex-direction:row;align-items:baseline;gap:8px}
+  .row{grid-template-columns:70px 1fr}
+}
+@media (prefers-reduced-motion:reduce){*{transition:none!important}}
+</style>
+<style>*,*::before{box-sizing:border-box} body{margin:0} [hidden]{display:none!important}</style>
+</head>
+<body>
+<div class="wrap">
+  <header>
+    <h1>Stalldienstplan</h1>
+    <p>Trag dich mit deinem Namen für den Morgen- oder Abenddienst ein. Gespeichert wird automatisch.</p>
+  </header>
+
+  <div class="bar">
+    <button class="nav" id="prev" aria-label="Vorige Woche">‹</button>
+    <div class="weekname"><b id="kw">KW –</b><span id="range">–</span></div>
+    <button class="nav" id="next" aria-label="Nächste Woche">›</button>
+  </div>
+
+  <div class="tools">
+    <button id="todayBtn">Diese Woche</button>
+    <button id="copyBtn">Woche in WhatsApp teilen</button>
+    <span class="grow"></span>
+    <span class="stats" id="stats"></span>
+  </div>
+  <div class="status" id="status">Plan wird geladen …</div>
+
+  <div class="days" id="days"></div>
+
+  <p class="note">Gilt ab 1. Dezember 2026. Offene Dienste sind rot umrandet. „Woche in WhatsApp teilen“ schickt eine Übersicht der Woche direkt in die Gruppe.</p>
+</div>
+<div class="toast" id="toast" hidden></div>
+
+<script>
+const START = new Date(2026,11,1);
+const DAYNAMES = ["Montag","Dienstag","Mittwoch","Donnerstag","Freitag","Samstag","Sonntag"];
+const pad = n => String(n).padStart(2,"0");
+const iso = d => d.getFullYear()+"-"+pad(d.getMonth()+1)+"-"+pad(d.getDate());
+const mondayOf = d => { const x = new Date(d.getFullYear(), d.getMonth(), d.getDate()); x.setDate(x.getDate()-(x.getDay()+6)%7); return x; };
+const addDays = (d,n) => { const x = new Date(d); x.setDate(x.getDate()+n); return x; };
+function isoWeek(d){ const t = new Date(Date.UTC(d.getFullYear(), d.getMonth(), d.getDate())); const day = t.getUTCDay()||7; t.setUTCDate(t.getUTCDate()+4-day); const y0 = new Date(Date.UTC(t.getUTCFullYear(),0,1)); return Math.ceil(((t-y0)/864e5+1)/7); }
+const fmt = d => pad(d.getDate())+"."+pad(d.getMonth()+1)+".";
+const FIRST_MON = mondayOf(START);
+function currentWeek(){ let w = mondayOf(new Date()); return w < FIRST_MON ? FIRST_MON : w; }
+let week = currentWeek();
+let data = {};
+const $ = id => document.getElementById(id);
+function toast(msg){ const t=$("toast"); t.textContent=msg; t.hidden=false; clearTimeout(toast.t); toast.t=setTimeout(()=>t.hidden=true,2400); }
+
+function render(){
+  const sun = addDays(week,6);
+  $("kw").textContent = "KW " + isoWeek(week) + " · " + sun.getFullYear();
+  $("range").textContent = fmt(week) + " – " + fmt(sun) + sun.getFullYear();
+  $("prev").disabled = week <= FIRST_MON;
+  const todayIso = iso(new Date()), host = $("days");
+  const active = document.activeElement && document.activeElement.id;
+  if (host.dataset.week !== iso(week)){
+    host.dataset.week = iso(week); host.innerHTML = "";
+    for (let i=0;i<7;i++){
+      const d = addDays(week,i), k = iso(d), off = d < START;
+      const el = document.createElement("section");
+      el.className = "day" + (k===todayIso?" today":"") + (off?" off":"");
+      el.innerHTML = `
+        <div class="dname"><b>${DAYNAMES[i]}</b><span>${fmt(d)}</span>${k===todayIso?"<em>Heute</em>":""}${off?"<em>vor Planstart</em>":""}</div>
+        <div class="row m"><label for="m-${k}">Morgens</label><input id="m-${k}" data-day="${k}" data-f="morgens" placeholder="offen – Name eintragen" maxlength="60" autocomplete="off"></div>
+        <div class="row a"><label for="a-${k}">Abends</label><input id="a-${k}" data-day="${k}" data-f="abends" placeholder="offen – Name eintragen" maxlength="60" autocomplete="off"></div>
+        <div class="row s"><label for="s-${k}">Sonstiges</label><textarea id="s-${k}" data-day="${k}" data-f="sonstiges" rows="1" placeholder="z. B. Hufschmied 10 Uhr, Heulieferung" maxlength="300"></textarea></div>`;
+      if (off) el.querySelectorAll("input,textarea").forEach(x=>{x.disabled=true;x.placeholder="";});
+      host.appendChild(el);
+    }
+  }
+  let open = 0;
+  host.querySelectorAll("input,textarea").forEach(el=>{
+    const v = (data[el.dataset.day]||{})[el.dataset.f] || "";
+    if (el.id !== active && !el.dataset.dirty) el.value = v;
+    if (el.tagName === "INPUT"){
+      const off = el.disabled, filled = el.value.trim() !== "";
+      el.classList.toggle("filled", filled); el.classList.toggle("empty", !filled && !off);
+      if (!filled && !off) open++;
+    }
+  });
+  $("stats").innerHTML = open ? `<strong>${open}</strong> ${open===1?"Dienst":"Dienste"} offen` : "Alle Dienste besetzt ✓";
+}
+
+let loading = 0;
+async function load(quiet){
+  const days = Array.from({length:7},(_,i)=>iso(addDays(week,i)));
+  const my = ++loading;
+  try{
+    const r = await fetch("/api/week?days="+days.join(","), {cache:"no-store"});
+    if (!r.ok) throw 0;
+    const j = await r.json();
+    if (my !== loading) return;
+    days.forEach(d=>{ data[d] = j.entries[d] || {}; });
+    $("status").textContent = "Aktuell · zuletzt geladen " + new Date().toLocaleTimeString("de-DE",{hour:"2-digit",minute:"2-digit"});
+    render();
+  }catch{ if (!quiet) $("status").textContent = "Der Plan kann gerade nicht geladen werden. Prüf deine Internetverbindung."; }
+}
+
+const timers = {};
+async function save(el){
+  const k = el.dataset.day, f = el.dataset.f, v = el.value.trim();
+  if (v === ((data[k]||{})[f]||"")){ delete el.dataset.dirty; return; }
+  $("status").textContent = "Speichert …";
+  try{
+    const r = await fetch("/api/entry",{method:"POST",headers:{"content-type":"application/json"},body:JSON.stringify({day:k,field:f,text:v})});
+    if (!r.ok) throw 0;
+    (data[k] ||= {})[f] = v; delete el.dataset.dirty;
+    $("status").textContent = "Gespeichert ✓"; render();
+  }catch{ $("status").textContent = "Speichern hat nicht geklappt. Bitte noch einmal versuchen."; }
+}
+$("days").addEventListener("input", e=>{
+  const el = e.target; if (!el.dataset.day) return;
+  el.dataset.dirty = "1";
+  if (el.tagName==="INPUT"){ const f = el.value.trim()!==""; el.classList.toggle("filled",f); el.classList.toggle("empty",!f); }
+  clearTimeout(timers[el.id]); timers[el.id] = setTimeout(()=>save(el), 1000);
+});
+$("days").addEventListener("change", e=>{ const el=e.target; if(!el.dataset.day) return; clearTimeout(timers[el.id]); save(el); });
+
+function go(w){ week = w; render(); load(); }
+$("prev").onclick = ()=>{ if (week > FIRST_MON) go(addDays(week,-7)); };
+$("next").onclick = ()=> go(addDays(week,7));
+$("todayBtn").onclick = ()=> go(currentWeek());
+
+$("copyBtn").onclick = async ()=>{
+  const sun = addDays(week,6);
+  let t = `🐴 *Stalldienst KW ${isoWeek(week)}* (${fmt(week)}–${fmt(sun)})\n`;
+  for (let i=0;i<7;i++){
+    const d = addDays(week,i), k = iso(d); if (d < START) continue;
+    const r = data[k]||{};
+    t += `\n*${DAYNAMES[i].slice(0,2)} ${fmt(d)}*  ☀️ ${r.morgens||"_offen_"}  🌙 ${r.abends||"_offen_"}`;
+    if (r.sonstiges) t += `\n   ↳ ${r.sonstiges}`;
+  }
+  t += `\n\nEintragen: ${location.origin}`;
+  if (navigator.share && matchMedia("(pointer:coarse)").matches){ try{ await navigator.share({text:t}); return; }catch(e){ if (e && e.name==="AbortError") return; } }
+  try{ await navigator.clipboard.writeText(t); toast("Kopiert – jetzt in WhatsApp einfügen"); }
+  catch{ toast("Kopieren nicht möglich"); }
+};
+
+// Aktuell halten: alle 30 s und beim Zurückkehren zur Seite
+setInterval(()=>{ if (document.visibilityState==="visible" && !document.querySelector("[data-dirty]")) load(true); }, 30000);
+document.addEventListener("visibilitychange", ()=>{ if (document.visibilityState==="visible"){ const w = currentWeek(); if (+w > +week && iso(week) === host_week_seen) week = w; render(); load(true); } });
+let host_week_seen = iso(week);
+render(); load();
+</script>
+</body>
+</html>
